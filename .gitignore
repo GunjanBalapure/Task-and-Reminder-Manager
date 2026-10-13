@@ -1,0 +1,4 @@
+node_modules/
+EVS_Final_Project/
+*.log
+.DS_Store
