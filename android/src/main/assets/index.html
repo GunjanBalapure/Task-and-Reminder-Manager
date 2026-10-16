@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Task &amp; Reminder Manager</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 14px;
+      font-family: Arial, sans-serif;
+      background: #f6f9fc;
+      color: #243447;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+      margin: 10px 0 24px;
+      font-size: 26px;
+    }
+
+    .form-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+
+    .fields {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .fields > div {
+      flex: 1;
+      min-width: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #64748b;
+      margin: 13px 0;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 14px;
+      background: #35a16b;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .notification-area {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .notify-btn {
+      background: #3182ce;
+      padding: 12px 18px;
+      font-weight: 600;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .notify-btn:hover {
+      opacity: 0.95;
+    }
+
+    #notificationStatus {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
+    #clockStatus {
+      color: #64748b;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .reminder-toast-container {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      left: 16px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 420px;
+      margin: 0 auto;
+      pointer-events: none;
+    }
+
+    .reminder-toast {
+      pointer-events: auto;
+      background: #ffffff;
+      border-left: 5px solid #3182ce;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: slideInToast 0.3s ease-out;
+    }
+
+    @keyframes slideInToast {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .reminder-toast-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #243447;
+    }
+
+    .reminder-toast-body {
+      font-size: 15px;
+      color: #243447;
+      overflow-wrap: anywhere;
+    }
+
+    .reminder-toast-time {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .reminder-toast-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .toast-dismiss-btn {
+      background: #3182ce;
+      padding: 7px 14px;
+      font-size: 13px;
+    }
+
+    .task-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 16px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .task-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-name {
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .completed {
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+
+    .reminder-info {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .actions {
+      display: flex;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .done-btn {
+      background: #3182ce;
+    }
+
+    .delete-btn {
+      background: #e53e3e;
+    }
+
+    .empty {
+      text-align: center;
+      color: #94a3b8;
+      margin-top: 25px;
+    }
+
+    .sync-card {
+      background: white;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 30px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .sync-title {
+      font-weight: bold;
+      color: #243447;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .sync-inputs {
+      display: none;
+      margin-top: 10px;
+      gap: 8px;
+    }
+
+    .sync-inputs input {
+      font-size: 13px;
+      padding: 8px;
+    }
+
+    .sync-btn {
+      background: #3182ce;
+      padding: 8px 12px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px) {
+      .fields {
+        flex-direction: column;
+      }
+
+      .task-card {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h2>📝 Task &amp; Reminder Manager</h2>
+
+    <section class="form-card">
+      <form id="taskForm">
+        <input
+          id="taskTitle"
+          name="task"
+          type="text"
+          maxlength="300"
+          required
+          placeholder="e.g., Take morning medicine or anniversary"
+        >
+
+        <div class="fields">
+          <div>
+            <label for="reminderDate">DATE (OPTIONAL)</label>
+            <input
+              id="reminderDate"
+              name="reminderDate"
+              type="date"
+            >
+          </div>
+
+          <div>
+            <label for="reminderTime">TIME (OPTIONAL)</label>
+            <input
+              id="reminderTime"
+              name="reminderTime"
+              type="time"
+            >
+          </div>
+        </div>
+
+        <p class="hint">
+          Select a time for a reminder. Leave the date blank for a daily reminder.
+        </p>
+
+        <button class="save-btn" type="submit">Save Task</button>
+      </form>
+    </section>
+
+    <div class="notification-area">
+      <button id="enableNotifications" class="notify-btn" type="button">
+        🔔 Enable Reminders &amp; Alerts
+      </button>
+
+      <p id="notificationStatus" role="status"></p>
+      <p id="clockStatus"></p>
+    </div>
+
+    <div id="reminderToastContainer" class="reminder-toast-container" aria-live="assertive"></div>
+
+    <section id="taskList"></section>
+
+    <div class="sync-card">
+      <div class="sync-title" id="syncToggle">
+        <span>🌐 Server Sync (Optional)</span>
+        <span id="syncArrow">▼</span>
+      </div>
+      <div class="sync-inputs" id="syncInputs">
+        <input type="url" id="serverUrl" placeholder="http://192.168.x.x:5000">
+        <button type="button" class="sync-btn" id="saveServerBtn">Sync</button>
+      </div>
+      <div id="syncStatus" style="font-size: 11px; margin-top: 5px;">Mode: Standalone Phone Storage</div>
+    </div>
+  </main>
+
+  <script>
+    // ==========================================
+    // 1. DATA STORAGE (STANDALONE + SYNC)
+    // ==========================================
+    const STORAGE_KEY = 'vivriti_tasks_app_db';
+    const SERVER_URL_KEY = 'vivriti_server_url';
+
+    function getLocalTasks() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          return JSON.parse(data);
+        }
+      } catch (e) {
+        console.error('Local storage read error:', e);
+      }
+
+      // Default sample tasks on fresh phone installation
+      const defaults = [
+        {
+          _id: 'sample_1',
+          task: 'Insulin medicine',
+          isCompleted: false,
+          reminderDate: '',
+          reminderTime: '08:00',
+          lastNotifiedFor: ''
+        },
+        {
+          _id: 'sample_2',
+          task: 'Take vitamins',
+          isCompleted: false,
+          reminderDate: '',
+          reminderTime: '13:00',
+          lastNotifiedFor: ''
+        }
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
+      return defaults;
+    }
+
+    function saveLocalTasks(tasks) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      } catch (e) {
+        console.error('Local storage save error:', e);
+      }
+    }
+
+    // ==========================================
+    // 2. RENDERING TASKS IN UI
+    // ==========================================
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, function(char) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[char];
+      });
+    }
+
+    function renderTasks() {
+      const taskListElement = document.getElementById('taskList');
+      const tasks = getLocalTasks();
+
+      if (!tasks || tasks.length === 0) {
+        taskListElement.innerHTML = '<p class="empty">Your to-do list is empty!</p>';
+        return;
+      }
+
+      // Sort newest first
+      const sorted = [...tasks].reverse();
+
+      taskListElement.innerHTML = sorted.map(function(task) {
+        return `
+          <div class="task-card">
+            <div class="task-info">
+              <div class="task-name ${task.isCompleted ? 'completed' : ''}">
+                ${escapeHtml(task.task)}
+              </div>
+
+              ${task.reminderTime ? `
+                <div class="reminder-info">
+                  ⏰ Reminder:
+                  ${task.reminderDate ? escapeHtml(task.reminderDate) : 'Daily'}
+                  at <b>${escapeHtml(task.reminderTime)}</b>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="actions">
+              <button class="done-btn" type="button" onclick="toggleTask('${task._id}')">
+                ${task.isCompleted ? '↩ Undo' : '✓ Done'}
+              </button>
+              <button class="delete-btn" type="button" onclick="deleteTask('${task._id}')">
+                🗑 Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.toggleTask = function(id) {
+      const tasks = getLocalTasks();
+      const task = tasks.find(t => t._id === id);
+      if (task) {
+        task.isCompleted = !task.isCompleted;
+        saveLocalTasks(tasks);
+        renderTasks();
+
+        // Optional sync with server
+        syncToggleTaskWithServer(id);
+      }
+    };
+
+    window.deleteTask = function(id) {
+      if (confirm('Delete this task?')) {
+        let tasks = getLocalTasks();
+        tasks = tasks.filter(t => t._id !== id);
+        saveLocalTasks(tasks);
+        renderTasks();
+
+        // Optional sync with server
+        syncDeleteTaskWithServer(id);
+      }
+    };
+
+    // ==========================================
+    // 3. DATE/TIME LOCAL HELPERS
+    // ==========================================
+    function getLocalDateTime() {
+      const now = new Date();
+      const date =
+        now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0');
+
+      const time =
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0');
+
+      return { date, time };
+    }
+
+    // ==========================================
+    // 4. NOTIFICATION & AUDIO ALERTS
+    // ==========================================
+    const statusElement = document.getElementById('notificationStatus');
+    const clockStatus = document.getElementById('clockStatus');
+    const enableButton = document.getElementById('enableNotifications');
+    const toastContainer = document.getElementById('reminderToastContainer');
+
+    function isAndroid() {
+      return !!(window.AndroidNative && typeof window.AndroidNative.showNotification === 'function');
+    }
+
+    function updateNotificationStatus() {
+      if (isAndroid()) {
+        statusElement.textContent = 'Android native notifications and in-app alerts are active.';
+        enableButton.textContent = '🔔 Reminders Active';
+        enableButton.style.background = '#35a16b';
+        return;
+      }
+
+      if (!('Notification' in window)) {
+        statusElement.textContent = 'In-app reminder alerts are active while the app is open.';
+        enableButton.textContent = '🔔 In-App Alerts Active';
+        enableButton.style.background = '#35a16b';
+        return;
+      }
+
+      if (Notification.permission === 'granted') {
+        statusElement.textContent = 'Notifications are enabled. In-app alerts are active.';
+        enableButton.textContent = '🔔 Notifications Enabled';
+        enableButton.style.background = '#35a16b';
+      } else if (Notification.permission === 'denied') {
+        statusElement.textContent = 'In-app alerts will display when reminders are due.';
+        enableButton.textContent = '🔔 In-App Alerts Active';
+        enableButton.style.background = '#3182ce';
+      } else {
+        statusElement.textContent = 'Tap to allow notifications. (In-app alerts are active).';
+        enableButton.textContent = '🔔 Enable Reminders';
+        enableButton.style.background = '#3182ce';
+      }
+    }
+
+    enableButton.addEventListener('click', async function() {
+      if (isAndroid()) {
+        try {
+          window.AndroidNative.showNotification('Task & Reminder Manager', 'Android notifications are working perfectly!');
+          window.AndroidNative.vibrate(200);
+        } catch (e) {}
+        updateNotificationStatus();
+        return;
+      }
+
+      if ('Notification' in window) {
+        try {
+          const perm = await Notification.requestPermission();
+          updateNotificationStatus();
+          if (perm === 'granted') {
+            new Notification('Task & Reminder Manager', {
+              body: 'Notifications are enabled!'
+            });
+          }
+        } catch (e) {}
+      }
+    });
+
+    function playReminderChime() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      } catch (e) {}
+    }
+
+    function showInAppToast(item) {
+      if (!toastContainer) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'reminder-toast';
+      toast.setAttribute('role', 'alert');
+
+      const header = document.createElement('div');
+      header.className = 'reminder-toast-header';
+      header.textContent = '⏰ Task Reminder';
+
+      const body = document.createElement('div');
+      body.className = 'reminder-toast-body';
+      body.textContent = item.task;
+
+      const timeInfo = document.createElement('div');
+      timeInfo.className = 'reminder-toast-time';
+      const timeStr = item.reminderTime || '';
+      const dateStr = item.reminderDate || 'Daily';
+      timeInfo.textContent = 'Scheduled: ' + dateStr + ' at ' + timeStr;
+
+      const actions = document.createElement('div');
+      actions.className = 'reminder-toast-actions';
+
+      const dismissBtn = document.createElement('button');
+      dismissBtn.className = 'toast-dismiss-btn';
+      dismissBtn.type = 'button';
+      dismissBtn.textContent = 'Dismiss';
+
+      dismissBtn.onclick = function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'all 0.2s ease-out';
+        setTimeout(function() { toast.remove(); }, 200);
+      };
+
+      actions.appendChild(dismissBtn);
+
+      toast.appendChild(header);
+      toast.appendChild(body);
+      toast.appendChild(timeInfo);
+      toast.appendChild(actions);
+
+      toastContainer.appendChild(toast);
+
+      setTimeout(function() {
+        if (toast.parentElement) toast.remove();
+      }, 60000);
+    }
+
+    // ==========================================
+    // 5. REAL-TIME REMINDER POLLING (5 SECONDS)
+    // ==========================================
+    let checking = false;
+    const shownNotifications = new Set();
+
+    function checkReminders() {
+      if (checking) return;
+      checking = true;
+
+      try {
+        const { date, time } = getLocalDateTime();
+        clockStatus.textContent = 'Last checked: ' + new Date().toLocaleTimeString();
+
+        const tasks = getLocalTasks();
+        let modified = false;
+
+        for (const task of tasks) {
+          if (task.isCompleted || !task.reminderTime) continue;
+
+          // Check if date matches or is daily
+          const isDateEligible = !task.reminderDate || task.reminderDate === date;
+          if (!isDateEligible) continue;
+
+          // Check if scheduled time has arrived
+          if (task.reminderTime > time) continue;
+
+          const occurrenceKey = date + '_' + task.reminderTime;
+          if (task.lastNotifiedFor === occurrenceKey) continue;
+
+          const sessionKey = task._id + '_' + occurrenceKey;
+          if (shownNotifications.has(sessionKey)) continue;
+
+          shownNotifications.add(sessionKey);
+
+          // Mark task as notified
+          task.lastNotifiedFor = occurrenceKey;
+          modified = true;
+
+          // Trigger native Android system notification
+          if (isAndroid()) {
+            try {
+              window.AndroidNative.showNotification('⏰ TASK REMINDER', task.task + ' (at ' + task.reminderTime + ')');
+              window.AndroidNative.vibrate(500);
+            } catch (e) {}
+          } else if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+              new Notification('⏰ TASK REMINDER', {
+                body: task.task + ' (' + task.reminderTime + ')',
+                tag: sessionKey,
+                requireInteraction: true
+              });
+            } catch (e) {}
+          }
+
+          // Trigger in-app visual toast and audio chime
+          playReminderChime();
+          showInAppToast(task);
+        }
+
+        if (modified) {
+          saveLocalTasks(tasks);
+        }
+      } catch (err) {
+        console.error('Reminder check error:', err);
+      } finally {
+        checking = false;
+      }
+    }
+
+    // ==========================================
+    // 6. FORM SUBMISSION WITH PAST DATE/TIME GUARD
+    // ==========================================
+    const dateInput = document.getElementById('reminderDate');
+    const timeInput = document.getElementById('reminderTime');
+    const taskForm = document.getElementById('taskForm');
+
+    function syncDateMin() {
+      const { date: todayDate } = getLocalDateTime();
+      if (dateInput) {
+        dateInput.min = todayDate;
+      }
+    }
+
+    syncDateMin();
+
+    taskForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      syncDateMin();
+
+      const taskTitle = document.getElementById('taskTitle').value.trim();
+      const selectedDate = dateInput.value.trim();
+      const selectedTime = timeInput.value.trim();
+      const { date: todayDate, time: todayTime } = getLocalDateTime();
+
+      if (!taskTitle) {
+        alert('Please enter a task.');
+        return;
+      }
+
+      if (selectedDate && !selectedTime) {
+        alert('Please select a time for the selected date.');
+        return;
+      }
+
+      // Past date check
+      if (selectedDate && selectedDate < todayDate) {
+        alert('Cannot set a reminder for a past date (' + selectedDate + '). Please select today or a future date.');
+        return;
+      }
+
+      // Past time check on same day
+      if (selectedDate && selectedDate === todayDate && selectedTime && selectedTime < todayTime) {
+        alert('Cannot set a reminder for a past time today (' + selectedTime + '). Current time is ' + todayTime + '. Please select a future time.');
+        return;
+      }
+
+      const newTask = {
+        _id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        task: taskTitle,
+        isCompleted: false,
+        reminderDate: selectedDate,
+        reminderTime: selectedTime,
+        lastNotifiedFor: ''
+      };
+
+      const tasks = getLocalTasks();
+      tasks.push(newTask);
+      saveLocalTasks(tasks);
+
+      // Reset form
+      document.getElementById('taskTitle').value = '';
+      dateInput.value = '';
+      timeInput.value = '';
+
+      renderTasks();
+      checkReminders();
+
+      // Optional sync with server
+      syncAddTaskWithServer(newTask);
+    });
+
+    // ==========================================
+    // 7. OPTIONAL SERVER SYNC ENGINE
+    // ==========================================
+    const syncToggle = document.getElementById('syncToggle');
+    const syncInputs = document.getElementById('syncInputs');
+    const serverUrlInput = document.getElementById('serverUrl');
+    const saveServerBtn = document.getElementById('saveServerBtn');
+    const syncStatus = document.getElementById('syncStatus');
+
+    const savedUrl = localStorage.getItem(SERVER_URL_KEY) || '';
+    if (savedUrl) {
+      serverUrlInput.value = savedUrl;
+      syncStatus.textContent = 'Server: ' + savedUrl;
+    }
+
+    syncToggle.addEventListener('click', function() {
+      const isVisible = syncInputs.style.display === 'flex';
+      syncInputs.style.display = isVisible ? 'none' : 'flex';
+      document.getElementById('syncArrow').textContent = isVisible ? '▼' : '▲';
+    });
+
+    saveServerBtn.addEventListener('click', async function() {
+      const url = serverUrlInput.value.trim().replace(/\/$/, '');
+      if (!url) {
+        localStorage.removeItem(SERVER_URL_KEY);
+        syncStatus.textContent = 'Mode: Standalone Phone Storage';
+        alert('Switched to Standalone Phone Storage.');
+        return;
+      }
+
+      try {
+        syncStatus.textContent = 'Connecting to ' + url + '...';
+        const res = await fetch(url + '/api/check-reminders?date=2026-10-16&time=12:00', { cache: 'no-store' });
+        if (res.ok) {
+          localStorage.setItem(SERVER_URL_KEY, url);
+          syncStatus.textContent = 'Connected: ' + url;
+          alert('Connected successfully to ' + url + '!');
+        } else {
+          syncStatus.textContent = 'Server returned HTTP ' + res.status;
+          alert('Server reachable but returned HTTP ' + res.status);
+        }
+      } catch (err) {
+        syncStatus.textContent = 'Connection failed (retrying in background)';
+        alert('Could not connect to ' + url + '.\nEnsure phone and PC are on the same Wi-Fi and server is running.');
+      }
+    });
+
+    async function syncAddTaskWithServer(task) {
+      const sUrl = localStorage.getItem(SERVER_URL_KEY);
+      if (!sUrl) return;
+      try {
+        await fetch(sUrl + '/add-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            task: task.task,
+            reminderDate: task.reminderDate,
+            reminderTime: task.reminderTime
+          })
+        });
+      } catch (e) {}
+    }
+
+    async function syncToggleTaskWithServer(id) {
+      const sUrl = localStorage.getItem(SERVER_URL_KEY);
+      if (!sUrl) return;
+      try {
+        await fetch(sUrl + '/toggle-task/' + id, { method: 'POST' });
+      } catch (e) {}
+    }
+
+    async function syncDeleteTaskWithServer(id) {
+      const sUrl = localStorage.getItem(SERVER_URL_KEY);
+      if (!sUrl) return;
+      try {
+        await fetch(sUrl + '/delete-task/' + id, { method: 'POST' });
+      } catch (e) {}
+    }
+
+    // ==========================================
+    // 8. INITIALIZATION
+    // ==========================================
+    renderTasks();
+    updateNotificationStatus();
+    checkReminders();
+    setInterval(checkReminders, 5000);
+
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) checkReminders();
+    });
+    window.addEventListener('focus', checkReminders);
+  </script>
+</body>
+</html>

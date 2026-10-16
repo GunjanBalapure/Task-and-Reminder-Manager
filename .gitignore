@@ -1,4 +1,8 @@
 node_modules/
 EVS_Final_Project/
+android/build/
+android/*.keystore
+android/*.apk
+*.idsig
 *.log
 .DS_Store
